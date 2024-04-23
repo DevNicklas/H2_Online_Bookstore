@@ -1,6 +1,14 @@
+-- Create a database
 DROP DATABASE IF EXISTS online_book_store;
 CREATE DATABASE online_book_store;
 
+-- Create a user since the database owner isn't a built-in concept in MySQL
+-- Grant all privileges to the user, which is the closest to a "database owner"
+DROP USER IF EXISTS 'dbowner'@'localhost';
+CREATE USER 'dbowner'@'localhost' IDENTIFIED BY 'RWAORL;akstakO1023?alooriA';
+GRANT ALL PRIVILEGES ON online_book_store.* TO 'dbowner'@'localhost';
+
+-- Create all tables within the newly created database "online_book_store"
 USE online_book_store;
 
 CREATE TABLE PriceDetails(

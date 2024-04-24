@@ -12,7 +12,7 @@ BEGIN
 	SELECT * FROM Books WHERE Title = bookTitle;
 END//
 
-CREATE PROCEDURE IF NOT EXISTS CreateCustomers(
+CREATE PROCEDURE IF NOT EXISTS CreateCustomer(
     IN p_FirstName VARCHAR(30),
     IN p_LastName VARCHAR(100),
     IN p_Email VARCHAR(255),

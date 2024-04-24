@@ -20,8 +20,6 @@ VALUES
 (189.95, 100),
 (219.95, 189.95);
 
-SELECT * FROM PriceDetails;
-
 INSERT INTO Authors(FirstName, LastName, Nationality, Birthday, DateOfDeath)
 VALUES
 ('Hans', 'Christian Andersen', 'Danish', '1805-09-07', '1875-08-04'),
@@ -35,19 +33,15 @@ VALUES
 ('Jussi', 'Adler-Olsen', 'Danish', '1950-09-02', NULL),
 ('Knud', 'Romer', 'Danish', '1951-08-29', NULL);
 
-SELECT * FROM Authors;
-
 INSERT INTO Books(ISBN, Title, Genre, ReleaseDate, PageAmount, AuthorID, PricingDetailID)
 VALUES
 ('978-87-01-31786-3', 'Den lille Havfrue', 'Eventyr', '1837-12-01', 32, 1, 1),
 ('978-87-05-03509-8', 'Babettes gæstebud', 'Novelle', '1958-04-01', 96, 2, 2),
 ('978-87-23-01534-7', 'Væk Fra Danmark', 'Roman', '1930-09-01', 352, 3, 6),
-('978-87-00-76352-8', 'Lykke-Per', 'Roman', '1898-09-091', 778, 6, 3),
+('978-87-00-76352-8', 'Lykke-Per', 'Roman', '1898-09-01', 778, 6, 3),
 ('978-87-28-00129-6', 'Creme Fraiche', 'Roman', '1978-09-01', 223, 7, 4),
 ('978-87-00-93811-9', 'Virginia', 'Roman', '2002-08-01', 200, 8, 5),
 ('978-87-03-04712-1', 'Kvinden i buret', 'Krimi', '2007-06-01', 472, 9, 5),
 ('978-87-02-15554-7', 'Den som blinker er bange for døden', 'Krimi', '2009-10-01', 420, 9, 6),
 ('978-87-03-04694-0', 'Den som blinker er bange for lyset', 'Roman', '2005-06-01', 400, 10, 7),
 ('978-87-78-10285-6', 'Raj Raj Raj', 'Roman', '2019-08-01', 300, 10, 6);
-
-SELECT * FROM Books;

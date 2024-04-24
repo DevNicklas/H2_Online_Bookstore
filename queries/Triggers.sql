@@ -15,8 +15,7 @@ BEGIN
            '\nSales Price: ', NEW.SalesPrice
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging insert operations on Authors table
 CREATE TRIGGER log_authors_insert
@@ -34,8 +33,7 @@ BEGIN
            '\nDate of Death: ', COALESCE(NEW.DateOfDeath, 'N/A')
           )
     );
-END;
-//
+END//
 
 CREATE TRIGGER log_books_insert
 AFTER INSERT ON Books
@@ -67,8 +65,7 @@ BEGIN
            '\nISBN: ', NEW.ISBN
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging insert operations on Storage table
 CREATE TRIGGER log_storage_insert
@@ -83,8 +80,7 @@ BEGIN
            '\nQuantity: ', NEW.Quantity
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging insert operations on Citys table
 CREATE TRIGGER log_citys_insert
@@ -98,8 +94,7 @@ BEGIN
            '\nCity Name: ', NEW.CityName
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging insert operations on LoginInfo table
 CREATE TRIGGER log_logininfo_insert
@@ -115,8 +110,7 @@ BEGIN
            '\nSalt: ', NEW.Salt
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging insert operations on Customers table
 CREATE TRIGGER log_customers_insert
@@ -138,8 +132,7 @@ BEGIN
            '\nLogin ID: ', NEW.LoginID
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging insert operations on PurchaseLog table
 CREATE TRIGGER log_purchaselog_insert
@@ -155,8 +148,7 @@ BEGIN
            '\nPurchase Date: ', NEW.PurchaseDate
           )
     );
-END;
-//
+END//
 -- Trigger for logging update operations on PriceDetails table
 CREATE TRIGGER log_pricedetails_update
 AFTER UPDATE ON PriceDetails
@@ -170,8 +162,7 @@ BEGIN
            IF(OLD.SalesPrice <> NEW.SalesPrice, CONCAT('\nSales Price: ', OLD.SalesPrice, ' -> ', NEW.SalesPrice), '')
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging update operations on Authors table
 CREATE TRIGGER log_authors_update
@@ -185,13 +176,11 @@ BEGIN
            IF(OLD.FirstName <> NEW.FirstName, CONCAT('\nFirst Name: ', OLD.FirstName, ' -> ', NEW.FirstName), ''),
            IF(OLD.LastName <> NEW.LastName, CONCAT('\nLast Name: ', OLD.LastName, ' -> ', NEW.LastName), ''),
            IF(OLD.Nationality <> NEW.Nationality, CONCAT('\nNationality: ', OLD.Nationality, ' -> ', NEW.Nationality), ''),
-           IF(OLD.Birthday <> NEW.Birthday, CONCAT('\nBirthday: ', COALESCE(OLD.Birthday, 'N/A'),, ' -> ',  COALESCE(NEW.Birthday, 'N/A'),), ''),
-           IF(OLD.DateOfDeath <> NEW.DateOfDeath, CONCAT('\nDate of Death: ',  COALESCE(OLD.DateOfDeath, 'N/A'), ' -> ',  COALESCE(NEW.DateOfDeath, 'N/A')), '')
+           IF(OLD.Birthday <> NEW.Birthday, CONCAT('\nBirthday: ', COALESCE(OLD.Birthday, 'N/A'), ' -> ', COALESCE(NEW.Birthday, 'N/A')), ''),
+           IF(OLD.DateOfDeath <> NEW.DateOfDeath, CONCAT('\nDate of Death: ', COALESCE(OLD.DateOfDeath, 'N/A'), ' -> ', COALESCE(NEW.DateOfDeath, 'N/A')), '')
           )
     );          
-           
-END;
-//
+END//
 
 CREATE TRIGGER log_books_update
 AFTER UPDATE ON Books
@@ -209,8 +198,7 @@ BEGIN
            IF(OLD.PricingDetailID <> NEW.PricingDetailID, CONCAT('\nPricing Detail ID: ', OLD.PricingDetailID, ' -> ', NEW.PricingDetailID), '')
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging update operations on BookAuthors table
 CREATE TRIGGER log_bookauthors_update
@@ -225,8 +213,7 @@ BEGIN
            IF(OLD.ISBN <> NEW.ISBN, CONCAT('\nISBN: ', OLD.ISBN, ' -> ', NEW.ISBN), '')
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging update operations on Storage table
 CREATE TRIGGER log_storage_update
@@ -240,8 +227,7 @@ BEGIN
            IF(OLD.Quantity <> NEW.Quantity, CONCAT('\nQuantity: ', OLD.Quantity, ' -> ', NEW.Quantity), '')
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging update operations on Citys table
 CREATE TRIGGER log_citys_update
@@ -255,8 +241,7 @@ BEGIN
            IF(OLD.CityName <> NEW.CityName, CONCAT('\nCity Name: ', OLD.CityName, ' -> ', NEW.CityName), '')
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging update operations on LoginInfo table
 CREATE TRIGGER log_logininfo_update
@@ -272,8 +257,7 @@ BEGIN
            IF(OLD.Salt <> NEW.Salt, CONCAT('\nSalt: ', OLD.Salt, ' -> ', NEW.Salt), '')
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging update operations on Customers table
 CREATE TRIGGER log_customers_update
@@ -295,8 +279,7 @@ BEGIN
            IF(OLD.LoginID <> NEW.LoginID, CONCAT('\nLogin ID: ', OLD.LoginID, ' -> ', NEW.LoginID), '')
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging update operations on PurchaseLog table
 CREATE TRIGGER log_purchaselog_update
@@ -312,8 +295,7 @@ BEGIN
            IF(OLD.PurchaseDate <> NEW.PurchaseDate, CONCAT('\nPurchase Date: ', OLD.PurchaseDate, ' -> ', NEW.PurchaseDate), '')
           )
     );
-END;
-//
+END//
 -- Trigger for logging delete operations on PriceDetails table
 CREATE TRIGGER log_pricedetails_delete
 AFTER DELETE ON PriceDetails
@@ -326,8 +308,7 @@ BEGIN
            '\nSales Price: ', OLD.SalesPrice
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging delete operations on Authors table
 CREATE TRIGGER log_authors_delete
@@ -340,12 +321,11 @@ BEGIN
            '\nFirst Name: ', OLD.FirstName,
            '\nLast Name: ', OLD.LastName,
            '\nNationality: ', OLD.Nationality,
-           '\nBirthday: ', COALESCE(NEW.Birthday, 'N/A'),
-           '\nDate of Death: ', COALESCE(NEW.DateOfDeath, 'N/A')
+           '\nBirthday: ', COALESCE(OLD.Birthday, 'N/A'),
+           '\nDate of Death: ', COALESCE(OLD.DateOfDeath, 'N/A')
           )
     );
-END;
-//
+END//
 
 CREATE TRIGGER log_books_delete
 AFTER DELETE ON Books
@@ -363,8 +343,7 @@ BEGIN
            '\nPricing Detail ID: ', OLD.PricingDetailID
           )
     );
-END;
-//
+END//
 -- Trigger for logging delete operations on BookAuthors table
 CREATE TRIGGER log_bookauthors_delete
 AFTER DELETE ON BookAuthors
@@ -374,8 +353,7 @@ BEGIN
     VALUES (NOW(), 
     CONCAT('Deleted row with Author ID: ', OLD.AuthorID, ' and ISBN: ', OLD.ISBN)
     );
-END;
-//
+END//
 
 -- Trigger for logging delete operations on Storage table
 CREATE TRIGGER log_storage_delete
@@ -388,8 +366,7 @@ BEGIN
            '\nQuantity: ', OLD.Quantity
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging delete operations on Citys table
 CREATE TRIGGER log_citys_delete
@@ -402,8 +379,7 @@ BEGIN
            '\nCity Name: ', OLD.CityName
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging delete operations on LoginInfo table
 CREATE TRIGGER log_logininfo_delete
@@ -418,8 +394,7 @@ BEGIN
            '\nSalt: ', OLD.Salt
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging delete operations on Customers table
 CREATE TRIGGER log_customers_delete
@@ -440,8 +415,7 @@ BEGIN
            '\nLogin ID: ', OLD.LoginID
           )
     );
-END;
-//
+END//
 
 -- Trigger for logging delete operations on PurchaseLog table
 CREATE TRIGGER log_purchaselog_delete
@@ -456,8 +430,8 @@ BEGIN
            '\nPurchase Date: ', OLD.PurchaseDate
           )
     );
-END;
-//
+END// 
+
 
 
 DELIMITER ;

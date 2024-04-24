@@ -30,8 +30,8 @@ BEGIN
            '\nFirst Name: ', NEW.FirstName,
            '\nLast Name: ', NEW.LastName,
            '\nNationality: ', NEW.Nationality,
-           '\nBirthday: ', NEW.Birthday,
-           '\nDate of Death: ', NEW.DateOfDeath
+           '\nBirthday: ', COALESCE(NEW.Birthday, 'N/A'),
+           '\nDate of Death: ', COALESCE(NEW.DateOfDeath, 'N/A')
           )
     );
 END;
@@ -185,10 +185,11 @@ BEGIN
            IF(OLD.FirstName <> NEW.FirstName, CONCAT('\nFirst Name: ', OLD.FirstName, ' -> ', NEW.FirstName), ''),
            IF(OLD.LastName <> NEW.LastName, CONCAT('\nLast Name: ', OLD.LastName, ' -> ', NEW.LastName), ''),
            IF(OLD.Nationality <> NEW.Nationality, CONCAT('\nNationality: ', OLD.Nationality, ' -> ', NEW.Nationality), ''),
-           IF(OLD.Birthday <> NEW.Birthday, CONCAT('\nBirthday: ', OLD.Birthday, ' -> ', NEW.Birthday), ''),
-           IF(OLD.DateOfDeath <> NEW.DateOfDeath, CONCAT('\nDate of Death: ', OLD.DateOfDeath, ' -> ', NEW.DateOfDeath), '')
+           IF(OLD.Birthday <> NEW.Birthday, CONCAT('\nBirthday: ', COALESCE(OLD.Birthday, 'N/A'),, ' -> ',  COALESCE(NEW.Birthday, 'N/A'),), ''),
+           IF(OLD.DateOfDeath <> NEW.DateOfDeath, CONCAT('\nDate of Death: ',  COALESCE(OLD.DateOfDeath, 'N/A'), ' -> ',  COALESCE(NEW.DateOfDeath, 'N/A')), '')
           )
-    );
+    );          
+           
 END;
 //
 
@@ -339,8 +340,8 @@ BEGIN
            '\nFirst Name: ', OLD.FirstName,
            '\nLast Name: ', OLD.LastName,
            '\nNationality: ', OLD.Nationality,
-           '\nBirthday: ', OLD.Birthday,
-           '\nDate of Death: ', OLD.DateOfDeath
+           '\nBirthday: ', COALESCE(NEW.Birthday, 'N/A'),
+           '\nDate of Death: ', COALESCE(NEW.DateOfDeath, 'N/A')
           )
     );
 END;

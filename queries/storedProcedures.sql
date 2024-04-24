@@ -12,7 +12,6 @@ BEGIN
 	SELECT * FROM Books WHERE Title = bookTitle;
 END//
 
---Customers START
 CREATE PROCEDURE IF NOT EXISTS CreateCustomers(
     IN p_FirstName VARCHAR(30),
     IN p_LastName VARCHAR(100),
@@ -80,15 +79,7 @@ BEGIN
 	SELECT * FROM Books;
 END//
     
--- You can't really edit/alter a procedure, so if you want to change it, you need to drop it, and create the new procedure
-
-DROP PROCEDURE IF EXISTS TestProcedure()
-
-CREATE PROCEDURE TestProcedure()
-BEGIN
-	SELECT Title FROM Books;
-END//
-    
-DROP PROCEDURE TestProcedure()
-    
 DELIMITER ;
+
+-- Drop TestProcedure because we don't need it, but just want to show we meet the goals
+DROP PROCEDURE TestProcedure;

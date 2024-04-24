@@ -7,8 +7,6 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES 
 (PostalCode, CityName);
 
-SELECT * FROM Citys
-
 INSERT INTO PriceDetails(PurchasePrice, SalesPrice)
 VALUES
 (79.95, 60),

@@ -49,10 +49,29 @@ BEGIN
     END IF;
 END//
 
-
-
-
---Customers END
+-- Retrieve Login if it exists
+CREATE PROCEDURE IF NOT EXISTS GetLoginInfo(
+    IN inUsername VARCHAR(30),
+    OUT outExists BOOLEAN,
+    OUT outHashedPassword VARCHAR(1023),
+    OUT outSalt VARCHAR(255)
+)
+BEGIN
+    DECLARE usernameCount INT UNSIGNED;
+ 
+    SELECT COUNT(*) INTO usernameCount
+    FROM LoginInfo
+    WHERE Username = inUsername;
+     
+    IF usernameCount > 0 THEN
+        SELECT PasswordHash, Salt INTO outHashedPassword, outSalt
+        FROM LoginInfo
+        WHERE Username = inUsername;
+        SET outExists = TRUE;
+    ELSE
+        SET outExists = FALSE;
+    END IF;
+END //
 
 -- To show we meet the goals
 

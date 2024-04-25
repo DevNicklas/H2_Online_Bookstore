@@ -90,8 +90,18 @@ CREATE TABLE PurchaseLog (
     FOREIGN KEY (ISBN) REFERENCES Books(ISBN)
 );
 
-CREATE TABLE Bogreden_Log (
+CREATE TABLE BogredenLog (
 	LogID INT AUTO_INCREMENT PRIMARY KEY,
     Stamp DATETIME NOT NULL,
     Log TEXT NOT NULL
 );
+
+CREATE INDEX idxPriceDetailsAllColumns ON PriceDetails(PurchasePrice, SalesPrice);
+CREATE INDEX idxAuthorsAllColumns ON Authors (FirstName, LastName, Nationality, Birthday, DateOfDeath);
+CREATE INDEX idxBooksAllColumns ON Books(Title, Genre, ReleaseDate, PageAmount, AuthorID, PricingDetailID);
+CREATE INDEX idxStorage ON Storage(Quantity);
+CREATE INDEX idxCitys ON Citys(CityName);
+CREATE INDEX idxLoginInfo ON LoginInfo(Username, PasswordHash, Salt);
+CREATE INDEX idxCustomersAllColumns ON Customers(FirstName, LastName, Email, PhoneNumber, Country, Region, PostalCode, StreetAddress, LoginID);
+CREATE INDEX idxPurchaseLog ON PurchaseLog(CustomerID, ISBN, PurhcaseDate);
+CREATE INDEX idxBogredenLog ON BogredenLog(Stamp, Log);

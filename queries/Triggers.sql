@@ -35,6 +35,7 @@ BEGIN
     );
 END//
 
+-- Trigger for logging insert operations on Books table
 CREATE TRIGGER log_books_insert
 AFTER INSERT ON Books
 FOR EACH ROW
@@ -52,20 +53,6 @@ BEGIN
           )
     );
 END;
-
--- Trigger for logging insert operations on BookAuthors table
-CREATE TRIGGER log_bookauthors_insert
-AFTER INSERT ON BookAuthors
-FOR EACH ROW
-BEGIN
-    INSERT INTO Bogreden_Log (Stamp, Log)
-    VALUES (NOW(), 
-    CONCAT('Inserted row into BookAuthors:',
-           '\nAuthor ID: ', NEW.AuthorID,
-           '\nISBN: ', NEW.ISBN
-          )
-    );
-END//
 
 -- Trigger for logging insert operations on Storage table
 CREATE TRIGGER log_storage_insert
@@ -182,6 +169,7 @@ BEGIN
     );          
 END//
 
+-- Trigger for logging update operations on Books table
 CREATE TRIGGER log_books_update
 AFTER UPDATE ON Books
 FOR EACH ROW
@@ -196,21 +184,6 @@ BEGIN
            IF(OLD.PageAmount <> NEW.PageAmount, CONCAT('\nPage Amount: ', OLD.PageAmount, ' -> ', NEW.PageAmount), ''),
            IF(OLD.AuthorID <> NEW.AuthorID, CONCAT('\nAuthor ID: ', OLD.AuthorID, ' -> ', NEW.AuthorID), ''),
            IF(OLD.PricingDetailID <> NEW.PricingDetailID, CONCAT('\nPricing Detail ID: ', OLD.PricingDetailID, ' -> ', NEW.PricingDetailID), '')
-          )
-    );
-END//
-
--- Trigger for logging update operations on BookAuthors table
-CREATE TRIGGER log_bookauthors_update
-AFTER UPDATE ON BookAuthors
-FOR EACH ROW
-BEGIN
-    INSERT INTO Bogreden_Log (Stamp, Log)
-    VALUES (NOW(), 
-    CONCAT('Updated row with Author ID: ', OLD.AuthorID, ' and ISBN: ', OLD.ISBN,
-           '\nChanges:',
-           IF(OLD.AuthorID <> NEW.AuthorID, CONCAT('\nAuthor ID: ', OLD.AuthorID, ' -> ', NEW.AuthorID), ''),
-           IF(OLD.ISBN <> NEW.ISBN, CONCAT('\nISBN: ', OLD.ISBN, ' -> ', NEW.ISBN), '')
           )
     );
 END//
@@ -327,6 +300,7 @@ BEGIN
     );
 END//
 
+-- Trigger for logging delete operations on Books table
 CREATE TRIGGER log_books_delete
 AFTER DELETE ON Books
 FOR EACH ROW
@@ -342,16 +316,6 @@ BEGIN
            '\nAuthor ID: ', OLD.AuthorID,
            '\nPricing Detail ID: ', OLD.PricingDetailID
           )
-    );
-END//
--- Trigger for logging delete operations on BookAuthors table
-CREATE TRIGGER log_bookauthors_delete
-AFTER DELETE ON BookAuthors
-FOR EACH ROW
-BEGIN
-    INSERT INTO Bogreden_Log (Stamp, Log)
-    VALUES (NOW(), 
-    CONCAT('Deleted row with Author ID: ', OLD.AuthorID, ' and ISBN: ', OLD.ISBN)
     );
 END//
 
@@ -431,7 +395,5 @@ BEGIN
           )
     );
 END// 
-
-
 
 DELIMITER ;

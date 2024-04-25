@@ -336,6 +336,15 @@ BEGIN
 END//
 	
 -- Retrieve a customer's purchase log from PurchaseLog table
+CREATE PROCEDURE IF NOT EXISTS GetPurchaseLogByCustomerID(
+    IN in_customer_id INT
+)
+BEGIN
+	-- Selects ISBN and Purchase from PurchaseLog
+    SELECT ISBN, PurchaseDate
+    FROM PurchaseLog
+    WHERE CustomerID = in_customer_id;
+END//
 
 -- To show we meet the goals
 CREATE PROCEDURE TestProcedure()

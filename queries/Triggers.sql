@@ -7,7 +7,7 @@ CREATE TRIGGER log_pricedetails_insert
 AFTER INSERT ON PriceDetails
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row into PriceDetails:',
            '\nPricing Detail ID: ', NEW.PricingDetailID,
@@ -22,7 +22,7 @@ CREATE TRIGGER log_authors_insert
 AFTER INSERT ON Authors
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row into Authors:',
            '\nAuthor ID: ', NEW.AuthorID,
@@ -39,7 +39,7 @@ CREATE TRIGGER log_books_insert
 AFTER INSERT ON Books
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row:',
            '\nISBN: ', NEW.ISBN,
@@ -58,7 +58,7 @@ CREATE TRIGGER log_bookauthors_insert
 AFTER INSERT ON BookAuthors
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row into BookAuthors:',
            '\nAuthor ID: ', NEW.AuthorID,
@@ -72,7 +72,7 @@ CREATE TRIGGER log_storage_insert
 AFTER INSERT ON Storage
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row into Storage:',
            '\nISBN: ', NEW.ISBN,
@@ -87,7 +87,7 @@ CREATE TRIGGER log_citys_insert
 AFTER INSERT ON Citys
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row into Citys:',
            '\nPostal Code: ', NEW.PostalCode,
@@ -101,7 +101,7 @@ CREATE TRIGGER log_logininfo_insert
 AFTER INSERT ON LoginInfo
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row into LoginInfo:',
            '\nLogin ID: ', NEW.LoginID,
@@ -117,7 +117,7 @@ CREATE TRIGGER log_customers_insert
 AFTER INSERT ON Customers
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row into Customers:',
            '\nCustomer ID: ', NEW.CustomerID,
@@ -126,8 +126,8 @@ BEGIN
            '\nEmail: ', NEW.Email,
            '\nPhone Number: ', NEW.PhoneNumber,
            '\nCountry: ', NEW.Country,
-           '\nRegion: ', NEW.Region,
-           '\nPostal Code: ', NEW.PostalCode,
+           '\nRegion: ', COALESCE(NEW.Region, 'N/A'), 
+           '\nPostal Code: ', NEW.PostalCode, 
            '\nStreet Address: ', NEW.StreetAddress,
            '\nLogin ID: ', NEW.LoginID
           )
@@ -139,7 +139,7 @@ CREATE TRIGGER log_purchaselog_insert
 AFTER INSERT ON PurchaseLog
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Inserted row into PurchaseLog:',
            '\nPurchase ID: ', NEW.PurchaseID,
@@ -154,7 +154,7 @@ CREATE TRIGGER log_pricedetails_update
 AFTER UPDATE ON PriceDetails
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with Pricing Detail ID: ', OLD.PricingDetailID,
            '\nChanges:',
@@ -169,7 +169,7 @@ CREATE TRIGGER log_authors_update
 AFTER UPDATE ON Authors
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with Author ID: ', OLD.AuthorID,
            '\nChanges:',
@@ -186,7 +186,7 @@ CREATE TRIGGER log_books_update
 AFTER UPDATE ON Books
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with ISBN: ', OLD.ISBN,
            '\nChanges:',
@@ -205,7 +205,7 @@ CREATE TRIGGER log_bookauthors_update
 AFTER UPDATE ON BookAuthors
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with Author ID: ', OLD.AuthorID, ' and ISBN: ', OLD.ISBN,
            '\nChanges:',
@@ -220,7 +220,7 @@ CREATE TRIGGER log_storage_update
 AFTER UPDATE ON Storage
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with ISBN: ', OLD.ISBN, ' and Storage Location: ', OLD.StorageLocation,
            '\nChanges:',
@@ -234,7 +234,7 @@ CREATE TRIGGER log_citys_update
 AFTER UPDATE ON Citys
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with Postal Code: ', OLD.PostalCode,
            '\nChanges:',
@@ -248,7 +248,7 @@ CREATE TRIGGER log_logininfo_update
 AFTER UPDATE ON LoginInfo
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with Login ID: ', OLD.LoginID,
            '\nChanges:',
@@ -264,7 +264,7 @@ CREATE TRIGGER log_customers_update
 AFTER UPDATE ON Customers
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with Customer ID: ', OLD.CustomerID,
            '\nChanges:',
@@ -274,7 +274,7 @@ BEGIN
            IF(OLD.PhoneNumber <> NEW.PhoneNumber, CONCAT('\nPhone Number: ', OLD.PhoneNumber, ' -> ', NEW.PhoneNumber), ''),
            IF(OLD.Country <> NEW.Country, CONCAT('\nCountry: ', OLD.Country, ' -> ', NEW.Country), ''),
            IF(OLD.Region <> NEW.Region, CONCAT('\nRegion: ', OLD.Region, ' -> ', NEW.Region), ''),
-           IF(OLD.PostalCode <> NEW.PostalCode, CONCAT('\nPostal Code: ', OLD.PostalCode, ' -> ', NEW.PostalCode), ''),
+           IF(OLD.PostalCode <> NEW.PostalCode, CONCAT('\nPostal Code: ', COALESCE(OLD.Region, 'N/A'), ' -> ',COALESCE(NEW.Region, 'N/A')), ''),
            IF(OLD.StreetAddress <> NEW.StreetAddress, CONCAT('\nStreet Address: ', OLD.StreetAddress, ' -> ', NEW.StreetAddress), ''),
            IF(OLD.LoginID <> NEW.LoginID, CONCAT('\nLogin ID: ', OLD.LoginID, ' -> ', NEW.LoginID), '')
           )
@@ -286,7 +286,7 @@ CREATE TRIGGER log_purchaselog_update
 AFTER UPDATE ON PurchaseLog
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Updated row with Purchase ID: ', OLD.PurchaseID,
            '\nChanges:',
@@ -301,7 +301,7 @@ CREATE TRIGGER log_pricedetails_delete
 AFTER DELETE ON PriceDetails
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row with Pricing Detail ID: ', OLD.PricingDetailID,
            '\nPurchase Price: ', OLD.PurchasePrice,
@@ -315,7 +315,7 @@ CREATE TRIGGER log_authors_delete
 AFTER DELETE ON Authors
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row with Author ID: ', OLD.AuthorID,
            '\nFirst Name: ', OLD.FirstName,
@@ -331,7 +331,7 @@ CREATE TRIGGER log_books_delete
 AFTER DELETE ON Books
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row',
            '\nISBN: ', OLD.ISBN,
@@ -349,7 +349,7 @@ CREATE TRIGGER log_bookauthors_delete
 AFTER DELETE ON BookAuthors
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row with Author ID: ', OLD.AuthorID, ' and ISBN: ', OLD.ISBN)
     );
@@ -360,7 +360,7 @@ CREATE TRIGGER log_storage_delete
 AFTER DELETE ON Storage
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row with ISBN: ', OLD.ISBN, ' and Storage Location: ', OLD.StorageLocation,
            '\nQuantity: ', OLD.Quantity
@@ -373,7 +373,7 @@ CREATE TRIGGER log_citys_delete
 AFTER DELETE ON Citys
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row with Postal Code: ', OLD.PostalCode,
            '\nCity Name: ', OLD.CityName
@@ -386,7 +386,7 @@ CREATE TRIGGER log_logininfo_delete
 AFTER DELETE ON LoginInfo
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row with Login ID: ', OLD.LoginID,
            '\nUsername: ', OLD.Username,
@@ -401,7 +401,7 @@ CREATE TRIGGER log_customers_delete
 AFTER DELETE ON Customers
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row with Customer ID: ', OLD.CustomerID,
            '\nFirst Name: ', OLD.FirstName,
@@ -409,7 +409,7 @@ BEGIN
            '\nEmail: ', OLD.Email,
            '\nPhone Number: ', OLD.PhoneNumber,
            '\nCountry: ', OLD.Country,
-           '\nRegion: ', OLD.Region,
+           '\nRegion: ', COALESCE(OLD.Region, 'N/A'),
            '\nPostal Code: ', OLD.PostalCode,
            '\nStreet Address: ', OLD.StreetAddress,
            '\nLogin ID: ', OLD.LoginID
@@ -422,7 +422,7 @@ CREATE TRIGGER log_purchaselog_delete
 AFTER DELETE ON PurchaseLog
 FOR EACH ROW
 BEGIN
-    INSERT INTO BogredenLog (Stamp, Log)
+    INSERT INTO Bogreden_Log (Stamp, Log)
     VALUES (NOW(), 
     CONCAT('Deleted row with Purchase ID: ', OLD.PurchaseID,
            '\nCustomer ID: ', OLD.CustomerID,

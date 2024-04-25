@@ -12,6 +12,77 @@ DROP PROCEDURE IF EXISTS DeleteCustomerPurchaseLog;
 
 DELIMITER //
 
+-- Create Book
+CREATE PROCEDURE IF NOT EXISTS CreateBook(
+    IN in_book_isbn CHAR(17),
+    IN in_book_title VARCHAR(50),
+    IN in_book_genre VARCHAR(50),
+    IN in_book_release_date DATE,
+    IN in_book_page_amount SMALLINT UNSIGNED,
+    IN in_book_author_first_name VARCHAR(30),
+    IN in_book_author_last_name VARCHAR(100),
+    IN in_book_author_nationality VARCHAR(100),
+    IN in_book_author_birthday DATE,
+    IN in_book_author_date_of_death DATE,
+    IN in_price_purchase DECIMAL(6,2),
+    IN in_price_sales DECIMAL(6,2),
+    IN in_book_pricing_detail_id INT
+)
+BEGIN
+    DECLARE local_existing_author_id INT;
+    DECLARE local_existing_book_count INT;
+    DECLARE local_existing_price_id INT;
+    DECLARE local_existing_author_count INT;
+    DECLARE local_existing_price_count INT;
+
+    -- Check if the book already exists
+    SELECT COUNT(*) INTO local_existing_book_count FROM Books WHERE ISBN = in_book_isbn;
+    
+    -- If the book already exists, return error
+    IF local_existing_book_count > 0 THEN
+        SELECT CONCAT('The book with ISBN ', in_book_isbn, ' already exists');
+    ELSE
+        -- Check if the author already exists
+        SELECT COUNT(*) INTO local_existing_author_count
+        FROM Authors
+        WHERE FirstName = in_book_author_first_name AND LastName = in_book_author_last_name;
+        
+        -- If author doesn't exist, create new author
+        IF local_existing_author_count = 0 THEN
+            -- Check if bookAuthorDateOfDeath is null
+            IF in_book_author_date_of_death IS NULL THEN
+                CALL CreateAuthor(in_book_author_first_name, in_book_author_last_name, in_book_author_nationality, in_book_author_birthday, NULL);
+            ELSE
+                CALL CreateAuthor(in_book_author_first_name, in_book_author_last_name, in_book_author_nationality, in_book_author_birthday, in_book_author_date_of_Death);
+            END IF;
+        END IF;
+
+        -- Check if the price details already exist
+        SELECT COUNT(*) INTO local_existing_price_count FROM PriceDetails WHERE PurchasePrice = in_price_purchase AND SalesPrice = in_price_sales;
+        
+        -- If price details don't exist, create new price details
+        IF local_existing_price_count = 0 THEN
+            INSERT INTO PriceDetails(PurchasePrice, SalesPrice) VALUES (in_price_purchase, in_price_sales);
+        END IF;
+
+        -- Get the author ID
+        SELECT AuthorID INTO local_existing_author_id
+        FROM Authors
+        WHERE FirstName = in_book_author_first_name AND LastName = in_book_author_last_name;
+
+        -- Get the price details ID
+        SELECT PricingDetailID INTO local_existing_price_id
+        FROM PriceDetails
+        WHERE PurchasePrice = in_price_purchase AND SalesPrice = in_price_sales;
+        
+        -- Insert the book using the author's ID and price details ID
+        INSERT INTO Books(ISBN, Title, Genre, ReleaseDate, PageAmount, AuthorID, PricingDetailID)
+        VALUES(in_book_isbn, in_book_title, in_book_genre, in_book_release_date, in_book_page_amount, local_existing_author_id, local_existing_price_id);
+        
+        SELECT CONCAT('Book with ISBN ', in_book_isbn, ' created successfully');
+    END IF;
+END //
+
 CREATE PROCEDURE GetAllBooks()
 BEGIN
 	SELECT * FROM Books;
@@ -91,7 +162,8 @@ BEGIN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CustomerID does not exist in LoginInfo table';
     END IF;
 END//
- -- Use to get a Customer by the LoginID
+
+-- Use to get a Customer by the LoginID
 CREATE PROCEDURE GetCustomerByLoginID(
     IN in_login_id INT
 )
@@ -261,6 +333,53 @@ BEGIN
     END IF;
 END//
 
+-- Create Author
+CREATE PROCEDURE IF NOT EXISTS CreateAuthor(
+    IN in_author_first_name VARCHAR(30),
+    IN in_author_last_name VARCHAR(100),
+    IN in_author_nationality VARCHAR(100),
+    IN in_author_birthday DATE,
+    IN in_author_date_of_death DATE  -- No default value specified
+)
+BEGIN
+    DECLARE local_existing_count INT;
+    
+    -- Check if author exists
+    SELECT COUNT(*) INTO local_existing_count
+    FROM Authors
+    WHERE FirstName = in_author_first_name AND LastName = in_author_last_name;
+    
+    IF local_existing_count = 0 THEN
+        -- Insert new author
+        INSERT INTO Authors(FirstName, LastName, Nationality, Birthday, DateOfDeath)
+        VALUES(in_author_first_name, in_author_last_name, in_author_nationality, in_author_birthday, IFNULL(in_author_date_of_death, NULL));
+    ELSE
+        SELECT 'Forfatteren eksistere allerede';
+    END IF;
+END//
+
+-- Create Price
+CREATE PROCEDURE IF NOT EXISTS CreatePrice(
+    IN in_price_purchase DECIMAL(6,2),
+    IN in_price_sales DECIMAL(6,2)
+)
+BEGIN
+    DECLARE local_existing_count INT;
+    
+    -- Check if price details already exist
+    SELECT COUNT(*) INTO local_existing_count
+    FROM PriceDetails
+    WHERE PurchasePrice = in_price_purchase AND SalesPrice = in_price_sales;
+    
+    IF local_existing_count = 0 THEN
+        -- Insert new price details
+        INSERT INTO PriceDetails(PurchasePrice, SalesPrice)
+        VALUES(in_price_purchase, in_price_sales);
+    ELSE
+        SELECT 'Price details already exist';
+    END IF;
+END//
+	
 -- Retrieve a customer's purchase log from PurchaseLog table
 
 -- To show we meet the goals

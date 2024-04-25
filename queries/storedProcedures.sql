@@ -66,22 +66,26 @@ BEGIN
 	DECLARE local_customer_exists INT UNSIGNED DEFAULT 0;
     DECLARE local_login_id INT;
     
+    -- Check if customer exists
     SELECT COUNT(*) INTO local_customer_exists
     FROM Customers
     WHERE CustomerID = in_customer_id;
     
     IF local_customer_exists != 0 THEN
         
+        -- Fetch customers loginID, since its needed to delete a login
 		SELECT LoginID INTO local_login_id
         FROM Customers
         WHERE CustomerID = in_customer_id;
         
+        -- Delete customer purchaselog
         CALL DeleteCustomerPurchaseLog(in_customer_id);
     
 		-- Delete a customer by ID
 		DELETE FROM Customers
         WHERE CustomerID = in_customer_id;
         
+        -- Delete customer login
         CALL DeleteLogin(local_login_id);
     ELSE
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CustomerID does not exist in LoginInfo table';
@@ -215,7 +219,10 @@ BEGIN
     FROM Books
     WHERE ISBN = in_isbn;
     
+    -- Check if customer and book exists
     IF local_customer_exists != 0 AND local_book_exists != 0 THEN
+    
+		-- Insert purchase into PurchaseLog table
 		INSERT INTO PurchaseLog(CustomerID, ISBN, PurchaseDate)
         VALUES (in_customer_id, in_isbn, CURDATE());
     ELSE

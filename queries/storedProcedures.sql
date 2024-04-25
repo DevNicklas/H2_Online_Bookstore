@@ -86,6 +86,29 @@ BEGIN
     END IF;
 END//
 
+CREATE PROCEDURE GetCustomerByLoginID(
+    IN p_LoginID INT
+)
+BEGIN
+    DECLARE customerExists INT UNSIGNED DEFAULT 0;
+
+    -- Check if customer exists with the given LoginID
+    SELECT COUNT(*) INTO customerExists
+    FROM Customers
+    WHERE LoginID = p_LoginID;
+
+    -- If customer exists, return customer details
+    IF customerExists > 0 THEN
+        SELECT *
+        FROM Customers
+        WHERE LoginID = p_LoginID;
+    ELSE
+        -- If no customer found, return an empty result set
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No customer found with the provided LoginID';
+    END IF;
+END//
+
+	
 -- Create a login using Username, Password and Salt
 CREATE PROCEDURE CreateLogin(
 	IN inUsername VARCHAR(30),

@@ -91,7 +91,7 @@ BEGIN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CustomerID does not exist in LoginInfo table';
     END IF;
 END//
-
+ -- Use to get a Customer by the LoginID
 CREATE PROCEDURE GetCustomerByLoginID(
     IN in_login_id INT
 )

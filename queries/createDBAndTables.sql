@@ -13,8 +13,8 @@ USE online_book_store;
 
 CREATE TABLE PriceDetails(
     PricingDetailID INT AUTO_INCREMENT PRIMARY KEY,
-    PurchasePrice DECIMAL(6,2) NOT NULL,
-    SalesPrice DECIMAL(6,2) NOT NULL
+    PurchasePrice DECIMAL(8,2) NOT NULL,
+    SalesPrice DECIMAL(8,2) NOT NULL
 );
 
 CREATE TABLE Authors(
@@ -23,7 +23,8 @@ CREATE TABLE Authors(
     LastName VARCHAR(100) NOT NULL,
     Nationality VARCHAR(100) NOT NULL,
     Birthday DATE,
-    DateOfDeath DATE
+    DateOfDeath DATE,
+    INDEX idxAuthorName (FirstName, LastName)
 );
 
 CREATE TABLE Books(
@@ -35,7 +36,8 @@ CREATE TABLE Books(
     AuthorID INT, 
     PricingDetailID INT, 
     FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID),
-    FOREIGN KEY (PricingDetailID) REFERENCES PriceDetails(PricingDetailID)
+    FOREIGN KEY (PricingDetailID) REFERENCES PriceDetails(PricingDetailID),
+    INDEX idxTitle (Title)
 );
 
 CREATE TABLE BookAuthors (
@@ -62,7 +64,7 @@ CREATE TABLE Citys (
 CREATE TABLE LoginInfo (
 	LoginID INT AUTO_INCREMENT PRIMARY KEY,
     Username VARCHAR(30) NOT NULL,
-    PasswordHash VARCHAR(1023) NOT NULL,
+    PasswordHash VARCHAR(255) NOT NULL,
     Salt VARCHAR(255) NOT NULL
 );
 
@@ -78,7 +80,8 @@ CREATE TABLE Customers (
     StreetAddress VARCHAR(255) NOT NULL,
     LoginID INT,
     FOREIGN KEY (PostalCode) REFERENCES Citys(PostalCode),
-    FOREIGN KEY (LoginID) REFERENCES LoginInfo(LoginID)
+    FOREIGN KEY (LoginID) REFERENCES LoginInfo(LoginID),
+    INDEX idxCustomerName (FirstName, LastName)
 );
 
 CREATE TABLE PurchaseLog (
@@ -95,13 +98,3 @@ CREATE TABLE BogredenLog (
     Stamp DATETIME NOT NULL,
     Log TEXT NOT NULL
 );
-
-CREATE INDEX idxPriceDetailsAllColumns ON PriceDetails(PurchasePrice, SalesPrice);
-CREATE INDEX idxAuthorsAllColumns ON Authors (FirstName, LastName, Nationality, Birthday, DateOfDeath);
-CREATE INDEX idxBooksAllColumns ON Books(Title, Genre, ReleaseDate, PageAmount, AuthorID, PricingDetailID);
-CREATE INDEX idxStorage ON Storage(Quantity);
-CREATE INDEX idxCitys ON Citys(CityName);
-CREATE INDEX idxLoginInfo ON LoginInfo(Username, PasswordHash, Salt);
-CREATE INDEX idxCustomersAllColumns ON Customers(FirstName, LastName, Email, PhoneNumber, Country, Region, PostalCode, StreetAddress, LoginID);
-CREATE INDEX idxPurchaseLog ON PurchaseLog(CustomerID, ISBN, PurhcaseDate);
-CREATE INDEX idxBogredenLog ON BogredenLog(Stamp, Log);

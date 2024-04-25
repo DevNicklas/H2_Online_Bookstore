@@ -1,6 +1,9 @@
+USE online_book_store;
+
 DROP PROCEDURE IF EXISTS CreateBook;
 DROP PROCEDURE IF EXISTS GetAllBooks;
 DROP PROCEDURE IF EXISTS GetBookByTitle;
+DROP PROCEDURE IF EXISTS AddExistingBookToStorage;
 DROP PROCEDURE IF EXISTS CreateCustomer;
 DROP PROCEDURE IF EXISTS DeleteCustomer;
 DROP PROCEDURE IF EXISTS GetCustomerByLoginID;
@@ -11,13 +14,16 @@ DROP PROCEDURE IF EXISTS GetLogin;
 DROP PROCEDURE IF EXISTS AddPurchase;
 DROP PROCEDURE IF EXISTS DeleteCustomerPurchaseLog;
 DROP PROCEDURE IF EXISTS CreatePrice;
+DROP PROCEDURE IF EXISTS DeletePrice;
 DROP PROCEDURE IF EXISTS CreateAuthor;
-
+DROP PROCEDURE IF EXISTS DeleteAuthor;
+DROP PROCEDURE IF EXISTS GetPurchaseLogByCustomerID;
 
 DELIMITER //
 
--- Create Book
-CREATE PROCEDURE IF NOT EXISTS CreateBook(
+-- Create a procedure which creates a book
+-- The procedure has to create an author and a price as well
+CREATE PROCEDURE CreateBook(
     IN in_book_isbn CHAR(17),
     IN in_book_title VARCHAR(50),
     IN in_book_genre VARCHAR(50),
@@ -28,8 +34,8 @@ CREATE PROCEDURE IF NOT EXISTS CreateBook(
     IN in_book_author_nationality VARCHAR(100),
     IN in_book_author_birthday DATE,
     IN in_book_author_date_of_death DATE,
-    IN in_price_purchase DECIMAL(6,2),
-    IN in_price_sales DECIMAL(6,2)
+    IN in_price_purchase DECIMAL(8,2),
+    IN in_price_sales DECIMAL(8,2)
 )
 BEGIN
     DECLARE local_book_exists INT;
@@ -45,6 +51,7 @@ BEGIN
     IF local_book_exists > 0 THEN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ISBN does already exist in Books table';
     ELSE
+    
 		-- Create author for book
 		CALL CreateAuthor(in_book_author_first_name, in_book_author_last_name, in_book_author_nationality, in_book_author_birthday, in_book_author_date_of_Death);
         SET local_author_id = LAST_INSERT_ID();
@@ -56,6 +63,9 @@ BEGIN
         -- Insert the book using the author's ID and price details ID
         INSERT INTO Books(ISBN, Title, Genre, ReleaseDate, PageAmount, AuthorID, PricingDetailID)
         VALUES(in_book_isbn, in_book_title, in_book_genre, in_book_release_date, in_book_page_amount, local_author_id, local_price_details_id);
+        
+        -- Insert quantity into the Storage table
+        CALL AddExistingBookToStorage(in_book_isbn, 1);
     END IF;
 END //
 
@@ -69,6 +79,43 @@ CREATE PROCEDURE GetBookByTitle(
 )
 BEGIN
 	SELECT * FROM Books WHERE Title = in_book_title;
+END//
+
+CREATE PROCEDURE AddExistingBookToStorage(
+	IN in_isbn CHAR(17),
+    IN in_quantity SMALLINT UNSIGNED
+)
+BEGIN
+	DECLARE local_book_exists_in_storage INT UNSIGNED DEFAULT 0;
+    
+	-- Check if ISBN exists in Books table
+    DECLARE local_isbn_exists INT UNSIGNED DEFAULT 0;
+    SELECT COUNT(*) INTO local_isbn_exists 
+    FROM Books 
+    WHERE ISBN = in_isbn;
+    
+    IF local_isbn_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ISBN does not exist in Books table';
+	ELSE
+    
+		-- Check if ISBN exists in Storage table
+		SELECT COUNT(*) INTO local_isbn_exists 
+		FROM Books 
+		WHERE ISBN = in_isbn;
+    
+		IF local_book_exists_in_storage = 0 THEN
+			
+            -- Insert new book into Storage table, if it doesn't exists
+			INSERT INTO Storage(ISBN, StorageLocation, Quantity)
+            VALUES (in_isbn, 'Ringsted Lager', in_quantity);
+        ELSE
+        
+			-- Update quantity of book in Storage table
+			UPDATE Storage
+			SET Quantity = Quantity + in_quantity
+            WHERE ISBN = in_isbn;
+		END IF;
+    END IF;
 END//
 
 CREATE PROCEDURE CreateCustomer(
@@ -201,7 +248,7 @@ BEGIN
             Salt = in_new_salt
 		WHERE LoginID = in_login_id;
 	ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'LoginID does not exist in LoginInfo table';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not update login (LoginID does not exist in LoginInfo table)';
     END IF;
 END//
 
@@ -223,7 +270,7 @@ BEGIN
 		DELETE FROM LoginInfo
 		WHERE LoginID = in_login_id;
 	ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'LoginID does not exist in LoginInfo table';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not delete login (LoginID does not exist in LoginInfo table)';
     END IF;
 END//
 
@@ -246,7 +293,7 @@ BEGIN
         FROM LoginInfo
         WHERE Username = in_username;
     ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Username does not exist in LoginInfo table';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not retrieve login (Username does not exist in LoginInfo table)';
     END IF;
 END//
 
@@ -267,14 +314,19 @@ BEGIN
     FROM Books
     WHERE ISBN = in_isbn;
     
-    -- Check if customer and book exists
-    IF local_customer_exists != 0 AND local_book_exists != 0 THEN
-    
-		-- Insert purchase into PurchaseLog table
-		INSERT INTO PurchaseLog(CustomerID, ISBN, PurchaseDate)
-        VALUES (in_customer_id, in_isbn, CURDATE());
+    -- Check if customer exists
+    IF local_customer_exists > 0 THEN
+		-- Check if book exists
+		IF local_book_exists > 0 THEN
+        
+			-- Insert purchase into PurchaseLog table
+			INSERT INTO PurchaseLog(CustomerID, ISBN, PurchaseDate)
+			VALUES (in_customer_id, in_isbn, CURDATE());
+        ELSE
+			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not delete purchase log (ISBN does not exist in Books table)';
+        END IF;
     ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CustomerID or ISBN could not be found';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not delete purchase log (CustomerID does not exist in Customers table)';
     END IF;
 END//
 
@@ -305,12 +357,12 @@ BEGIN
             WHERE CustomerID = in_customer_id;
         END IF;
     ELSE
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer does not exist';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not delete purchase log (CustomerID does not exist in Customers table)';
     END IF;
 END//
 
--- Create Author
-CREATE PROCEDURE IF NOT EXISTS CreateAuthor(
+-- Create Author in Authors table
+CREATE PROCEDURE CreateAuthor(
     IN in_author_first_name VARCHAR(30),
     IN in_author_last_name VARCHAR(100),
     IN in_author_nationality VARCHAR(100),
@@ -323,16 +375,72 @@ BEGIN
 	VALUES(in_author_first_name, in_author_last_name, in_author_nationality, in_author_birthday, in_author_date_of_death);
 END//
 
--- Create Price
-CREATE PROCEDURE IF NOT EXISTS CreatePrice(
+-- Delete Author from Authors table
+CREATE PROCEDURE DeleteAuthor(
+    IN in_author_id VARCHAR(30)
+)
+BEGIN
+	DECLARE local_author_exists INT UNSIGNED DEFAULT 0;
+
+	-- Check if price detail exists
+    SELECT COUNT(*) INTO local_author_exists
+    FROM Authors
+    WHERE AuthorID = in_author_id;
+
+	IF local_author_exists > 0 THEN
+
+		-- Delete author in Authors table
+		DELETE FROM Authors
+        WHERE AuthorID = in_author_id;
+	ELSE
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not delete author (AuthorID does not exist in Authors table)';
+    END IF;
+END//
+
+-- Create price in PriceDetails table
+CREATE PROCEDURE CreatePrice(
     IN in_price_purchase DECIMAL(8,2),
     IN in_price_sales DECIMAL(8,2)
 )
 BEGIN
 
-	-- Insert new price in PriceDetails table
-	INSERT INTO PriceDetails(PurchasePrice, SalesPrice)
-	VALUES(in_price_purchase, in_price_sales);
+    -- Check if both prices are non-negative
+    IF in_price_purchase >= 0 AND in_price_sales >= 0 THEN
+    
+        -- Check if both prices are under the max
+        IF in_price_purchase < 10000000 AND in_price_sales < 10000000 THEN
+        
+            -- Insert new price in PriceDetails table
+            INSERT INTO PriceDetails(PurchasePrice, SalesPrice)
+            VALUES(in_price_purchase, in_price_sales);
+        ELSE
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not create price (Sale price or purchase price exceeds maximum)';
+        END IF;
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not create price (Sale price or purchase price is negative)';
+    END IF;
+END//
+
+-- Delete Price from PriceDetails table
+CREATE PROCEDURE DeletePrice(
+	IN in_price_detail_id INT
+)
+BEGIN
+	DECLARE local_price_detail_exists INT UNSIGNED DEFAULT 0;
+
+	-- Check if price detail exists
+    SELECT COUNT(*) INTO local_price_detail_exists
+    FROM PriceDetails
+    WHERE PricingDetailID = in_price_detail_id;
+
+	IF local_price_detail_exists > 0 THEN
+
+		-- Delete price details using PricingDetailID
+		DELETE FROM PriceDetails
+		WHERE PricingDetailID = in_price_detail_id;
+	ELSE
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not delete price (PricingDetailID does not exist in PriceDetails table)';
+	END IF;
 END//
 	
 -- Retrieve a customer's purchase log from PurchaseLog table
@@ -340,10 +448,22 @@ CREATE PROCEDURE IF NOT EXISTS GetPurchaseLogByCustomerID(
     IN in_customer_id INT
 )
 BEGIN
-	-- Selects ISBN and Purchase from PurchaseLog
-    SELECT ISBN, PurchaseDate
-    FROM PurchaseLog
+	DECLARE local_customer_exists INT UNSIGNED DEFAULT 0;
+
+	-- Check if customer exists
+    SELECT COUNT(*) INTO local_customer_exists
+    FROM Customers
     WHERE CustomerID = in_customer_id;
+
+	IF local_customer_exists > 0 THEN
+    
+		-- Selects ISBN and Purchase from PurchaseLog
+		SELECT ISBN, PurchaseDate
+		FROM PurchaseLog
+		WHERE CustomerID = in_customer_id;
+	ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not fetch purchase log (CustomerID does not exist in Customers table)';
+	END IF;
 END//
 
 -- To show we meet the goals

@@ -1,13 +1,14 @@
-DROP PROCEDURE GetAllBooks;
-DROP PROCEDURE GetBookByTitle;
-DROP PROCEDURE CreateCustomer;
-DROP PROCEDURE DeleteCustomer;
-DROP PROCEDURE CreateLogin;
-DROP PROCEDURE UpdateLogin;
-DROP PROCEDURE DeleteLogin;
-DROP PROCEDURE GetLogin;
-DROP PROCEDURE AddPurchase;
-DROP PROCEDURE DeleteCustomerPurchaseLog;
+DROP PROCEDURE IF EXISTS GetAllBooks;
+DROP PROCEDURE IF EXISTS GetBookByTitle;
+DROP PROCEDURE IF EXISTS CreateCustomer;
+DROP PROCEDURE IF EXISTS DeleteCustomer;
+DROP PROCEDURE IF EXISTS GetCustomerByLoginID;
+DROP PROCEDURE IF EXISTS CreateLogin;
+DROP PROCEDURE IF EXISTS UpdateLogin;
+DROP PROCEDURE IF EXISTS DeleteLogin;
+DROP PROCEDURE IF EXISTS GetLogin;
+DROP PROCEDURE IF EXISTS AddPurchase;
+DROP PROCEDURE IF EXISTS DeleteCustomerPurchaseLog;
 
 DELIMITER //
 
@@ -17,136 +18,136 @@ BEGIN
 END//
 
 CREATE PROCEDURE GetBookByTitle(
-	IN bookTitle VARCHAR(50)
+	IN in_book_title VARCHAR(50)
 )
 BEGIN
-	SELECT * FROM Books WHERE Title = bookTitle;
+	SELECT * FROM Books WHERE Title = in_book_title;
 END//
 
-
-CREATE PROCEDURE GetCustomerByLoginID(
-    IN local_LoginID INT
+CREATE PROCEDURE CreateCustomer(
+    IN in_first_name VARCHAR(30),
+    IN in_last_name VARCHAR(100),
+    IN in_email VARCHAR(255),
+    IN in_phone_number VARCHAR(15),
+    IN in_country VARCHAR(100),
+    IN in_region VARCHAR(50),
+    IN in_postal_code VARCHAR(15),
+    IN in_street_address VARCHAR(255),
+    IN in_username VARCHAR(30),
+    IN in_password_hash VARCHAR(1023),
+    IN in_salt VARCHAR(255)
 )
 BEGIN
-    DECLARE customerExists INT UNSIGNED DEFAULT 0;
+    DECLARE local_login_id INT;
+
+    -- Check if PostalCode exists in Cities table
+    DECLARE local_postal_code_exists INT DEFAULT 0;
+    SELECT COUNT(*) INTO local_postal_code_exists FROM Citys WHERE PostalCode = in_postal_code;
+    
+    IF local_postal_code_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'PostalCode does not exist in Cities table';
+    ELSE
+        -- Insert into LoginInfo table
+        CALL CreateLogin(in_username, in_password_hash, in_salt);
+
+        -- Get the generated LoginID
+        SET local_login_id = LAST_INSERT_ID();
+
+        -- Insert into Customers table
+        INSERT INTO Customers (FirstName, LastName, Email, PhoneNumber, Country, Region, PostalCode, StreetAddress, LoginID)
+        VALUES (in_first_name, in_last_name, in_email, in_phone_number, in_country, in_region, in_postal_code, in_street_address, local_login_id);
+    END IF;
+END//
+
+CREATE PROCEDURE DeleteCustomer(
+	IN in_customer_id INT
+)
+BEGIN
+	DECLARE local_customer_exists INT UNSIGNED DEFAULT 0;
+    DECLARE local_login_id INT;
+    
+    SELECT COUNT(*) INTO local_customer_exists
+    FROM Customers
+    WHERE CustomerID = in_customer_id;
+    
+    IF local_customer_exists != 0 THEN
+        
+		SELECT LoginID INTO local_login_id
+        FROM Customers
+        WHERE CustomerID = in_customer_id;
+        
+        CALL DeleteCustomerPurchaseLog(in_customer_id);
+    
+		-- Delete a customer by ID
+		DELETE FROM Customers
+        WHERE CustomerID = in_customer_id;
+        
+        CALL DeleteLogin(local_login_id);
+    ELSE
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CustomerID does not exist in LoginInfo table';
+    END IF;
+END//
+
+CREATE PROCEDURE GetCustomerByLoginID(
+    IN in_login_id INT
+)
+BEGIN
+    DECLARE local_customer_exists INT UNSIGNED DEFAULT 0;
 
     -- Check if customer exists with the given LoginID
-    SELECT COUNT(*) INTO customerExists
+    SELECT COUNT(*) INTO local_customer_exists
     FROM Customers
-    WHERE LoginID = local_LoginID;
+    WHERE LoginID = in_login_id;
 
     -- If customer exists, return customer details
-    IF customerExists > 0 THEN
+    IF local_customer_exists > 0 THEN
         SELECT *
         FROM Customers
-        WHERE LoginID = local_LoginID;
+        WHERE LoginID = in_login_id;
     ELSE
         -- If no customer found, return an empty result set
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No customer found with the provided LoginID';
     END IF;
 END//
 
-
-CREATE PROCEDURE CreateCustomer(
-    IN local_FirstName VARCHAR(30),
-    IN local_LastName VARCHAR(100),
-    IN local_Email VARCHAR(255),
-    IN local_PhoneNumber VARCHAR(15),
-    IN local_Country VARCHAR(100),
-    IN local_Region VARCHAR(50),
-    IN local_PostalCode VARCHAR(15),
-    IN local_StreetAddress VARCHAR(255),
-    IN local_Username VARCHAR(30),
-    IN local_PasswordHash VARCHAR(1023),
-    IN local_Salt VARCHAR(255)
-)
-BEGIN
-    DECLARE v_LoginID INT;
-
-    -- Check if PostalCode exists in Cities table
-    DECLARE v_Exists INT DEFAULT 0;
-    SELECT COUNT(*) INTO v_Exists FROM Citys WHERE PostalCode = local_PostalCode;
-    
-    IF v_Exists = 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'PostalCode does not exist in Cities table';
-    ELSE
-        -- Insert into LoginInfo table
-        CALL CreateLogin(local_Username, local_PasswordHash, local_Salt);
-
-        -- Get the generated LoginID
-        SET v_LoginID = LAST_INSERT_ID();
-
-        -- Insert into Customers table
-        INSERT INTO Customers (FirstName, LastName, Email, PhoneNumber, Country, Region, PostalCode, StreetAddress, LoginID)
-        VALUES (local_FirstName, local_LastName, local_Email, local_PhoneNumber, local_Country, local_Region, local_PostalCode, local_StreetAddress, v_LoginID);
-    END IF;
-END//
-
-CREATE PROCEDURE DeleteCustomer(
-	IN inCustomerID INT
-)
-BEGIN
-	DECLARE customerExists INT UNSIGNED DEFAULT 0;
-    DECLARE loginID INT;
-    
-    SELECT COUNT(*) INTO customerExists
-    FROM Customers
-    WHERE CustomerID = inCustomerID;
-    
-    IF customerExists != 0 THEN
-        
-		SELECT LoginID INTO loginID
-        FROM Customers
-        WHERE CustomerID = inCustomerID;
-        
-        CALL DeleteLogin(loginID);
-        CALL DeleteCustomerPurchaseLog(inCustomerID);
-    
-		-- Delete a customer by ID
-		DELETE FROM Customers
-        WHERE CustomerID = inCustomerID;
-    ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CustomerID does not exist in LoginInfo table';
-    END IF;
-END//
-
+	
 -- Create a login using Username, Password and Salt
 CREATE PROCEDURE CreateLogin(
-	IN inUsername VARCHAR(30),
-    IN inPasswordHash VARCHAR(1023),
-    IN inSalt VARCHAR(255)
+	IN in_username VARCHAR(30),
+    IN in_hashed_password VARCHAR(1023),
+    IN in_salt VARCHAR(255)
 )
 BEGIN
 	
     -- Insert login information into LoginInfo table
 	INSERT INTO LoginInfo (Username, PasswordHash, Salt)
-    VALUES (inUsername, inPasswordHash, inSalt);
+    VALUES (in_username, in_hashed_password, in_salt);
 END//
 
 -- Update a login information by LoginID using Username, Password and Salt
 CREATE PROCEDURE UpdateLogin(
-	IN inLoginID INT,
-	IN inNewUsername VARCHAR(30),
-    IN inNewPasswordHash VARCHAR(1023),
-    IN inNewSalt VARCHAR(255)
+	IN in_login_id INT,
+	IN in_new_username VARCHAR(30),
+    IN in_new_hashed_password VARCHAR(1023),
+    IN in_new_salt VARCHAR(255)
 )
 BEGIN
-	DECLARE idExists INT UNSIGNED DEFAULT 0;
+	DECLARE local_id_exists INT UNSIGNED DEFAULT 0;
     
     -- Check if LoginID exists in LoginInfo table
-    SELECT COUNT(*) INTO idExists
+    SELECT COUNT(*) INTO local_id_exists
     FROM LoginInfo
-    WHERE LoginID = inLoginID;
+    WHERE LoginID = in_login_id;
     
-    IF idExists != 0 THEN
+    IF local_id_exists != 0 THEN
     
 		-- Update login by LoginID using new login information
 		UPDATE LoginInfo
         SET
-			Username = inNewUsername,
-            PasswordHash = inNewPasswordHash,
-            Salt = inNewSalt
-		WHERE LoginID = inLogidIN;
+			Username = in_new_username,
+            PasswordHash = in_new_hashed_password,
+            Salt = in_new_salt
+		WHERE LoginID = in_login_id;
 	ELSE
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'LoginID does not exist in LoginInfo table';
     END IF;
@@ -154,21 +155,21 @@ END//
 
 -- Delete a login by a loginID
 CREATE PROCEDURE DeleteLogin(
-	IN inLoginID INT
+	IN in_login_id INT
 )
 BEGIN
-	DECLARE idExists INT UNSIGNED DEFAULT 0;
+	DECLARE local_id_exists INT UNSIGNED DEFAULT 0;
     
     -- Check if LoginID exists in LoginInfo table
-    SELECT COUNT(*) INTO idExists
+    SELECT COUNT(*) INTO local_id_exists
     FROM LoginInfo
-    WHERE LoginID = inLoginID;
+    WHERE LoginID = in_login_id;
     
-    IF idExists != 0 THEN
+    IF local_id_exists != 0 THEN
     
 		-- Delete login from LoginInfo by LoginID
 		DELETE FROM LoginInfo
-		WHERE LoginID = inLoginID;
+		WHERE LoginID = in_login_id;
 	ELSE
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'LoginID does not exist in LoginInfo table';
     END IF;
@@ -176,22 +177,22 @@ END//
 
 -- Retrieve Login if it exists
 CREATE PROCEDURE GetLogin(
-    IN inUsername VARCHAR(30)
+    IN in_username VARCHAR(30)
 )
 BEGIN
-    DECLARE usernameExists INT UNSIGNED DEFAULT 0;
+    DECLARE local_username_exists INT UNSIGNED DEFAULT 0;
  
 	-- Check if username exists in LoginInfo table
-    SELECT COUNT(*) INTO usernameExists
+    SELECT COUNT(*) INTO local_username_exists
     FROM LoginInfo
-    WHERE Username = inUsername;
+    WHERE Username = in_username;
      
-    IF usernameExists != 0 THEN
+    IF local_username_exists != 0 THEN
     
 		-- Selects PasswordHash and Salt of the login
 		SELECT PasswordHash, Salt
         FROM LoginInfo
-        WHERE Username = inUsername;
+        WHERE Username = in_username;
     ELSE
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Username does not exist in LoginInfo table';
     END IF;
@@ -199,24 +200,24 @@ END//
 
 -- Add a purchase from a customer to PurchaseLog table
 CREATE PROCEDURE AddPurchase(
-	IN inCustomerID INT,
-    IN inISBN CHAR(17)
+	IN in_customer_id INT,
+    IN in_isbn CHAR(17)
 )
 BEGIN
-	DECLARE customerExists INT UNSIGNED DEFAULT 0;
-    DECLARE bookExists INT UNSIGNED DEFAULT 0;
+	DECLARE local_customer_exists INT UNSIGNED DEFAULT 0;
+    DECLARE local_book_exists INT UNSIGNED DEFAULT 0;
     
-	SELECT COUNT(*) INTO customerExists
+	SELECT COUNT(*) INTO local_customer_exists
     FROM Customers
-    WHERE CustomerID = inCustomerID;
+    WHERE CustomerID = in_customer_id;
     
-    SELECT COUNT(*) INTO bookExists
+    SELECT COUNT(*) INTO local_book_exists
     FROM Books
-    WHERE ISBN = inISBN;
+    WHERE ISBN = in_isbn;
     
-    IF customerExists != 0 AND bookExists != 0 THEN
+    IF local_customer_exists != 0 AND local_book_exists != 0 THEN
 		INSERT INTO PurchaseLog(CustomerID, ISBN, PurchaseDate)
-        VALUES (inCustomerID, inISBN, CURDATE());
+        VALUES (in_customer_id, in_isbn, CURDATE());
     ELSE
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CustomerID or ISBN could not be found';
     END IF;
@@ -226,29 +227,27 @@ END//
 
 -- Remove all purchases from a customer from PurchaseLog table
 CREATE PROCEDURE DeleteCustomerPurchaseLog(
-    IN inCustomerID INT
+    IN in_customer_id INT
 )
 BEGIN
-    DECLARE customerExists INT UNSIGNED DEFAULT 0;
-    DECLARE customerPurchaseLogExists INT UNSIGNED DEFAULT 0;
+    DECLARE local_customer_exists INT UNSIGNED DEFAULT 0;
+    DECLARE local_customer_purchase_log_exists INT UNSIGNED DEFAULT 0;
 
-    SELECT COUNT(*) INTO customerExists
+    SELECT COUNT(*) INTO local_customer_exists
     FROM Customers
-    WHERE CustomerID = inCustomerID;
+    WHERE CustomerID = in_customer_id;
 
-    SELECT COUNT(*) INTO customerPurchaseLogExists
+    SELECT COUNT(*) INTO local_customer_purchase_log_exists
     FROM PurchaseLog
-    WHERE CustomerID = inCustomerID;
+    WHERE CustomerID = in_customer_id;
 
 	-- Check if the customer exists and the customer has any record in the PurchaseLog table
-    IF customerExists > 0 THEN
-        IF customerPurchaseLogExists > 0 THEN
+    IF local_customer_exists > 0 THEN
+        IF local_customer_purchase_log_exists > 0 THEN
         
 			-- Delete all existing records which has the customer's id from the PurchaseLog table
             DELETE FROM PurchaseLog
-            WHERE CustomerID = inCustomerID;
-		ELSE
-			SELECT 'Customer does not have a purchase log';
+            WHERE CustomerID = in_customer_id;
         END IF;
     ELSE
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer does not exist';
@@ -267,16 +266,3 @@ DELIMITER ;
 
 -- Drop TestProcedure because we don't need it, but just want to show we meet the goals
 DROP PROCEDURE TestProcedure;
-CALL GetCustomerByLoginID(2);
-SELECT * FROM Customers;
-SELECT * FROM PurchaseLog;
-SELECT * FROM LoginInfo;
-SELECT * FROM Books;
-
-CALL AddPurchase(3, '978-87-28-00129-6');
--- CALL RemoveCustomerPurchaseLog(1);
--- CALL CreateLogin('per', '421', 'ma');
--- CALL GetLogin('nick');
-CALL DeleteLogin(2);
-CALL CreateCustomer('1', 'Gustavsen', 'testmail', '+45 22222222', 'Denmark', null, '4100', 'Ahorn Alle 3', 'peter', 'ok', 'fedtsalt');
-CALL DeleteCustomer(3);

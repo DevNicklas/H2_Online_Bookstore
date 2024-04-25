@@ -1,6 +1,6 @@
 USE online_book_store;
 
-LOAD DATA INFILE 'C:/Users/zbc23jakl/Desktop/XAMPP/mysql/data/Danske_postnumre.csv'
+LOAD DATA INFILE 'C:\postalCodes.csv'
 INTO TABLE Citys
 FIELDS TERMINATED BY ',' 
 LINES TERMINATED BY '\n' 
@@ -52,3 +52,15 @@ CALL AddPurchase(7, '978-87-03-04694-0');
 CALL AddPurchase(8, '978-87-78-10285-6');
 CALL AddPurchase(9, '978-87-23-01534-7');
 CALL AddPurchase(10, '978-87-28-00129-6');
+
+SELECT * FROM PriceDetails;
+SELECT * FROM Authors;
+SELECT * FROM Books;
+SELECT * FROM Storage;
+SELECT * FROM Citys;
+SELECT * FROM LoginInfo;
+SELECT * FROM Customers;
+SELECT * FROM PurchaseLog;
+SELECT * FROM BogredenLog;
+
+CALL UpdateLogin(12, 'rawr', 'hej', 'virkelig');

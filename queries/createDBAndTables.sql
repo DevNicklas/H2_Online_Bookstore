@@ -40,14 +40,6 @@ CREATE TABLE Books(
     INDEX idxTitle (Title)
 );
 
-CREATE TABLE BookAuthors (
-    AuthorID INT,
-    ISBN CHAR(17),
-    PRIMARY KEY (AuthorID, ISBN),
-    FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID),
-    FOREIGN KEY (ISBN) REFERENCES Books(ISBN)
-);
-
 CREATE TABLE Storage(
     ISBN CHAR(17),
     StorageLocation VARCHAR(50),

@@ -501,7 +501,6 @@ END//
 
 
 
-
 -- Stored Procedures
 
 
@@ -977,11 +976,14 @@ BEGIN
 	END IF;
 END//
 
+DELIMITER ;
+
 
 
 
 
 -- Insert of data just dummy data at the moment
+
 
 
 

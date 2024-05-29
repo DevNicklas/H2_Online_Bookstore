@@ -5,7 +5,7 @@ CREATE DATABASE online_book_store;
 -- Create a user since the database owner isn't a built-in concept in MySQL
 -- Grant all privileges to the user, which is the closest to a "database owner"
 DROP USER IF EXISTS 'dbowner'@'localhost';
-CREATE USER 'dbowner'@'localhost' IDENTIFIED BY 'RWAORL;akstakO1023?alooriA';
+CREATE USER 'dbowner'@'localhost' IDENTIFIED BY 'RWAORLakstakO1023alooriA';
 GRANT ALL PRIVILEGES ON online_book_store.* TO 'dbowner'@'localhost';
 
 -- Create all tables within the newly created database "online_book_store"
@@ -24,7 +24,7 @@ CREATE TABLE Authors(
     Nationality VARCHAR(100) NOT NULL,
     Birthday DATE,
     DateOfDeath DATE,
-    INDEX idxAuthorName (FirstName, LastName)
+    INDEX idxAuthorLastName (LastName)
 );
 
 CREATE TABLE Books(
@@ -53,10 +53,15 @@ CREATE TABLE Citys (
     CityName VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE LoginInfo (
+CREATE TABLE Countries (
+	CountryCode CHAR(2) PRIMARY KEY,
+    CountryName VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Logins (
 	LoginID INT AUTO_INCREMENT PRIMARY KEY,
     Username VARCHAR(30) NOT NULL,
-    PasswordHash VARCHAR(255) NOT NULL,
+    PasswordHash VARCHAR(1023) NOT NULL,
     Salt VARCHAR(255) NOT NULL
 );
 
@@ -66,13 +71,14 @@ CREATE TABLE Customers (
     LastName VARCHAR(100) NOT NULL,
     Email VARCHAR(255) NOT NULL,
     PhoneNumber VARCHAR(15),
-    Country VARCHAR(100) NOT NULL,
+    CountryCode CHAR(2),
     Region VARCHAR(50),
     PostalCode VARCHAR(15),
     StreetAddress VARCHAR(255) NOT NULL,
     LoginID INT,
+    FOREIGN KEY (CountryCode) REFERENCES Countries(CountryCode),
     FOREIGN KEY (PostalCode) REFERENCES Citys(PostalCode),
-    FOREIGN KEY (LoginID) REFERENCES LoginInfo(LoginID),
+    FOREIGN KEY (LoginID) REFERENCES Logins(LoginID),
     INDEX idxCustomerName (FirstName, LastName)
 );
 
@@ -184,14 +190,28 @@ BEGIN
     );
 END//
 
--- Trigger for logging insert operations on LoginInfo table
-CREATE TRIGGER log_logininfo_insert
-AFTER INSERT ON LoginInfo
+-- Trigger for logging insert operations on Countries table
+CREATE TRIGGER log_countries_insert
+AFTER INSERT ON Countries
 FOR EACH ROW
 BEGIN
     INSERT INTO BogredenLog (Stamp, Log)
     VALUES (NOW(), 
-    CONCAT('Inserted row into LoginInfo:',
+    CONCAT('Inserted row into Countries:',
+           '\nConutry Code: ', NEW.CountryCode,
+           '\nCountry Name: ', NEW.CountryName
+          )
+    );
+END//
+
+-- Trigger for logging insert operations on Logins table
+CREATE TRIGGER log_logins_insert
+AFTER INSERT ON Logins
+FOR EACH ROW
+BEGIN
+    INSERT INTO BogredenLog (Stamp, Log)
+    VALUES (NOW(), 
+    CONCAT('Inserted row into Logins:',
            '\nLogin ID: ', NEW.LoginID,
            '\nUsername: ', NEW.Username,
            '\nPassword Hash: ', NEW.PasswordHash,
@@ -213,7 +233,7 @@ BEGIN
            '\nLast Name: ', NEW.LastName,
            '\nEmail: ', NEW.Email,
            '\nPhone Number: ', COALESCE(NEW.PhoneNumber, 'N/A'),
-           '\nCountry: ', NEW.Country,
+           '\nCountryCode: ', NEW.CountryCode,
            '\nRegion: ', COALESCE(NEW.Region, 'N/A'), 
            '\nPostal Code: ', NEW.PostalCode, 
            '\nStreet Address: ', NEW.StreetAddress,
@@ -237,6 +257,7 @@ BEGIN
           )
     );
 END//
+
 -- Trigger for logging update operations on PriceDetails table
 CREATE TRIGGER log_pricedetails_update
 AFTER UPDATE ON PriceDetails
@@ -317,9 +338,23 @@ BEGIN
     );
 END//
 
--- Trigger for logging update operations on LoginInfo table
-CREATE TRIGGER log_logininfo_update
-AFTER UPDATE ON LoginInfo
+-- Trigger for logging update operations on Countries table
+CREATE TRIGGER log_countries_update
+AFTER UPDATE ON Countries
+FOR EACH ROW
+BEGIN
+    INSERT INTO BogredenLog (Stamp, Log)
+    VALUES (NOW(), 
+    CONCAT('Updated row with Country Code: ', OLD.CountryCode,
+           '\nChanges:',
+           IF(OLD.CountryName <> NEW.CountryName, CONCAT('\nCity Name: ', OLD.CountryName, ' -> ', NEW.CountryName), '')
+          )
+    );
+END//
+
+-- Trigger for logging update operations on Logins table
+CREATE TRIGGER log_logins_update
+AFTER UPDATE ON Logins
 FOR EACH ROW
 BEGIN
     INSERT INTO BogredenLog (Stamp, Log)
@@ -346,7 +381,7 @@ BEGIN
            IF(OLD.LastName <> NEW.LastName, CONCAT('\nLast Name: ', OLD.LastName, ' -> ', NEW.LastName), ''),
            IF(OLD.Email <> NEW.Email, CONCAT('\nEmail: ', OLD.Email, ' -> ', NEW.Email), ''),
            IF(OLD.PhoneNumber <> NEW.PhoneNumber, CONCAT('\nPhone Number: ', COALESCE(OLD.PhoneNumber, 'N/A'), ' -> ', COALESCE(NEW.PhoneNumber, 'N/A')), ''),
-           IF(OLD.Country <> NEW.Country, CONCAT('\nCountry: ', OLD.Country, ' -> ', NEW.Country), ''),
+           IF(OLD.CountryCode <> NEW.CountryCode, CONCAT('\nCountryCode: ', OLD.CountryCode, ' -> ', NEW.CountryCode), ''),
            IF(OLD.Region <> NEW.Region, CONCAT('\nRegion: ', OLD.Region, ' -> ', NEW.Region), ''),
            IF(OLD.PostalCode <> NEW.PostalCode, CONCAT('\nPostal Code: ', COALESCE(OLD.Region, 'N/A'), ' -> ',COALESCE(NEW.Region, 'N/A')), ''),
            IF(OLD.StreetAddress <> NEW.StreetAddress, CONCAT('\nStreet Address: ', OLD.StreetAddress, ' -> ', NEW.StreetAddress), ''),
@@ -370,6 +405,7 @@ BEGIN
           )
     );
 END//
+
 -- Trigger for logging delete operations on PriceDetails table
 CREATE TRIGGER log_pricedetails_delete
 AFTER DELETE ON PriceDetails
@@ -446,9 +482,22 @@ BEGIN
     );
 END//
 
--- Trigger for logging delete operations on LoginInfo table
-CREATE TRIGGER log_logininfo_delete
-AFTER DELETE ON LoginInfo
+-- Trigger for logging delete operations on Countries table
+CREATE TRIGGER log_countries_delete
+AFTER DELETE ON Countries
+FOR EACH ROW
+BEGIN
+    INSERT INTO BogredenLog (Stamp, Log)
+    VALUES (NOW(), 
+    CONCAT('Deleted row with Country Code: ', OLD.CountryCode,
+           '\nCity Name: ', OLD.CountryName
+          )
+    );
+END//
+
+-- Trigger for logging delete operations on Logins table
+CREATE TRIGGER log_logins_delete
+AFTER DELETE ON Logins
 FOR EACH ROW
 BEGIN
     INSERT INTO BogredenLog (Stamp, Log)
@@ -473,7 +522,7 @@ BEGIN
            '\nLast Name: ', OLD.LastName,
            '\nEmail: ', OLD.Email,
            '\nPhone Number: ', COALESCE(OLD.PhoneNumber, 'N/A'),
-           '\nCountry: ', OLD.Country,
+           '\nCountryCode: ', OLD.CountryCode,
            '\nRegion: ', COALESCE(OLD.Region, 'N/A'),
            '\nPostal Code: ', OLD.PostalCode,
            '\nStreet Address: ', OLD.StreetAddress,
@@ -508,25 +557,17 @@ END//
 
 
 -- Create a procedure which creates a book
--- The procedure has to create an author and a price as well
 CREATE PROCEDURE CreateBook(
     IN in_book_isbn CHAR(17),
     IN in_book_title VARCHAR(50),
     IN in_book_genre VARCHAR(50),
     IN in_book_release_date DATE,
     IN in_book_page_amount SMALLINT UNSIGNED,
-    IN in_book_author_first_name VARCHAR(30),
-    IN in_book_author_last_name VARCHAR(100),
-    IN in_book_author_nationality VARCHAR(100),
-    IN in_book_author_birthday DATE,
-    IN in_book_author_date_of_death DATE,
-    IN in_price_purchase DECIMAL(8,2),
-    IN in_price_sales DECIMAL(8,2)
+    IN in_author_id INT,
+    IN in_price_details_id INT
 )
 BEGIN
     DECLARE local_book_exists INT;
-    DECLARE local_author_id INT;
-    DECLARE local_price_details_id INT;
 
     -- Check if the book already exists
     SELECT COUNT(*) INTO local_book_exists
@@ -537,18 +578,10 @@ BEGIN
     IF local_book_exists > 0 THEN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ISBN does already exist in Books table';
     ELSE
-    
-		-- Create author for book
-		CALL CreateAuthor(in_book_author_first_name, in_book_author_last_name, in_book_author_nationality, in_book_author_birthday, in_book_author_date_of_Death);
-        SET local_author_id = LAST_INSERT_ID();
         
-        -- Add price to PriceDetails table
-		CALL CreatePrice(in_price_purchase, in_price_sales);
-        SET local_price_details_id = LAST_INSERT_ID();
-        
-        -- Insert the book using the author's ID and price details ID
+        -- Insert the book into the books table
         INSERT INTO Books(ISBN, Title, Genre, ReleaseDate, PageAmount, AuthorID, PricingDetailID)
-        VALUES(in_book_isbn, in_book_title, in_book_genre, in_book_release_date, in_book_page_amount, local_author_id, local_price_details_id);
+        VALUES(in_book_isbn, in_book_title, in_book_genre, in_book_release_date, in_book_page_amount, in_author_id, in_price_details_id);
         
         -- Insert quantity into the Storage table
         CALL AddExistingBookToStorage(in_book_isbn, 1);
@@ -583,6 +616,7 @@ BEGIN
     IF local_isbn_exists = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not add book to storage (ISBN does not exist in Books table)';
 	ELSE
+    
 		-- Check if ISBN exists in Storage table
 		SELECT COUNT(*) INTO local_book_exists_in_storage 
 		FROM Storage 
@@ -608,16 +642,13 @@ CREATE PROCEDURE CreateCustomer(
     IN in_last_name VARCHAR(100),
     IN in_email VARCHAR(255),
     IN in_phone_number VARCHAR(15),
-    IN in_country VARCHAR(100),
+    IN in_country_code VARCHAR(100),
     IN in_region VARCHAR(50),
     IN in_postal_code VARCHAR(15),
     IN in_street_address VARCHAR(255),
-    IN in_username VARCHAR(30),
-    IN in_password_hash VARCHAR(1023),
-    IN in_salt VARCHAR(255)
+    IN in_login_id INT
 )
 BEGIN
-    DECLARE local_login_id INT;
 
     -- Check if PostalCode exists in Cities table
     DECLARE local_postal_code_exists INT DEFAULT 0;
@@ -626,15 +657,10 @@ BEGIN
     IF local_postal_code_exists = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not create customer (PostalCode does not exist in Citys table)';
     ELSE
-        -- Insert into LoginInfo table
-        CALL CreateLogin(in_username, in_password_hash, in_salt);
-
-        -- Get the generated LoginID
-        SET local_login_id = LAST_INSERT_ID();
-
+    
         -- Insert into Customers table
-        INSERT INTO Customers (FirstName, LastName, Email, PhoneNumber, Country, Region, PostalCode, StreetAddress, LoginID)
-        VALUES (in_first_name, in_last_name, in_email, in_phone_number, in_country, in_region, in_postal_code, in_street_address, local_login_id);
+        INSERT INTO Customers (FirstName, LastName, Email, PhoneNumber, CountryCode, Region, PostalCode, StreetAddress, LoginID)
+        VALUES (in_first_name, in_last_name, in_email, in_phone_number, in_country_code, in_region, in_postal_code, in_street_address, in_login_id);
     END IF;
 END//
 
@@ -671,7 +697,7 @@ BEGIN
     END IF;
 END//
 
--- Use to get a Customer by the LoginID
+-- Get a Customer by the LoginID
 CREATE PROCEDURE GetCustomerByLoginID(
     IN in_login_id INT
 )
@@ -685,12 +711,11 @@ BEGIN
 
     -- If customer exists, return customer details
     IF local_customer_exists > 0 THEN
-        SELECT *
-        FROM Customers
+        SELECT * FROM Customers
         WHERE LoginID = in_login_id;
     ELSE
         -- If no customer found, return an empty result set
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not retrieve customer information (CustomerID does not exist in Customers table)';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not retrieve customer information (LoginID does not exist in Customers table)';
     END IF;
 END//
 
@@ -703,8 +728,8 @@ CREATE PROCEDURE CreateLogin(
 )
 BEGIN
 	
-    -- Insert login information into LoginInfo table
-	INSERT INTO LoginInfo (Username, PasswordHash, Salt)
+    -- Insert login information into Logins table
+	INSERT INTO Logins (Username, PasswordHash, Salt)
     VALUES (in_username, in_hashed_password, in_salt);
 END//
 
@@ -718,16 +743,16 @@ CREATE PROCEDURE UpdateLogin(
 BEGIN
 	DECLARE local_id_exists INT UNSIGNED DEFAULT 0;
     
-    -- Check if LoginID exists in LoginInfo table
+    -- Check if LoginID exists in Logins table
     SELECT COUNT(*) INTO local_id_exists
-    FROM LoginInfo
+    FROM Logins
     WHERE LoginID = in_login_id;
     
     IF local_id_exists != 0 THEN
 		IF in_new_hashed_password IS NOT NULL AND in_new_salt IS NOT NULL THEN
 		
 			-- Update login by LoginID using new login information
-			UPDATE LoginInfo
+			UPDATE Logins
 			SET
 				Username = IFNULL(in_new_username, Username),
 				PasswordHash = in_new_hashed_password,
@@ -737,7 +762,7 @@ BEGIN
 			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not update login (Password or salt is null)';
         END IF;
 	ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not update login (LoginID does not exist in LoginInfo table)';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not update login (LoginID does not exist in Logins table)';
     END IF;
 END//
 
@@ -748,18 +773,18 @@ CREATE PROCEDURE DeleteLogin(
 BEGIN
 	DECLARE local_id_exists INT UNSIGNED DEFAULT 0;
     
-    -- Check if LoginID exists in LoginInfo table
+    -- Check if LoginID exists in Logins table
     SELECT COUNT(*) INTO local_id_exists
-    FROM LoginInfo
+    FROM Logins
     WHERE LoginID = in_login_id;
     
     IF local_id_exists != 0 THEN
     
-		-- Delete login from LoginInfo by LoginID
-		DELETE FROM LoginInfo
+		-- Delete login from Logins by LoginID
+		DELETE FROM Logins
 		WHERE LoginID = in_login_id;
 	ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not delete login (LoginID does not exist in LoginInfo table)';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not delete login (LoginID does not exist in Logins table)';
     END IF;
 END//
 
@@ -770,19 +795,19 @@ CREATE PROCEDURE GetLogin(
 BEGIN
     DECLARE local_username_exists INT UNSIGNED DEFAULT 0;
  
-	-- Check if username exists in LoginInfo table
+	-- Check if username exists in Logins table
     SELECT COUNT(*) INTO local_username_exists
-    FROM LoginInfo
+    FROM Logins
     WHERE Username = in_username;
      
     IF local_username_exists != 0 THEN
     
 		-- Selects PasswordHash and Salt of the login
 		SELECT PasswordHash, Salt
-        FROM LoginInfo
+        FROM Logins
         WHERE Username = in_username;
     ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not retrieve login (Username does not exist in LoginInfo table)';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not retrieve login (Username does not exist in Logins table)';
     END IF;
 END//
 
@@ -968,8 +993,7 @@ BEGIN
 	IF local_customer_exists > 0 THEN
     
 		-- Selects ISBN and Purchase from PurchaseLog
-		SELECT ISBN, PurchaseDate
-		FROM PurchaseLog
+		SELECT ISBN, PurchaseDate FROM PurchaseLog
 		WHERE CustomerID = in_customer_id;
 	ELSE
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Can not fetch purchase log (CustomerID does not exist in Customers table)';
@@ -987,8 +1011,9 @@ DELIMITER ;
 
 
 
-
+-- Deleta data from Citys just to be sure, that nothing is in the table beore loading data in it
 DELETE FROM Citys;
+
 LOAD DATA INFILE 'C:\postalCodes.csv'
 INTO TABLE Citys
 FIELDS TERMINATED BY ',' 
@@ -996,48 +1021,69 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES 
 (PostalCode, CityName);
 
--- Creats book for test
-CALL CreateBook('978-87-01-31786-3', 'Den lille Havfrue', 'Eventyr', '1837-12-01', 32, 'Hans', 'Christian Andersen', 'Danish', '1805-09-07', '1875-08-04', 79.95, 60);
-CALL CreateBook('978-87-05-03509-8', 'Babettes gæstebud', 'Novelle', '1958-04-01', 96, 'Karen', 'Blixen', 'Danish', '1885-04-17', '1962-09-07', 129.95, 110.95);
-CALL CreateBook('978-87-23-01534-7', 'Væk Fra Danmark', 'Roman', '1930-09-01', 352, 'H.C.', 'Branner', 'Danish', '1903-07-22', '1966-06-30', 249.95, 200.95);
-CALL CreateBook('978-87-00-76352-8', 'Lykke-Per', 'Roman', '1898-09-091', 778, 'Henrik', 'Pontoppidan', 'Danish', '1857-07-24', '1943-08-21', 179.95, 99.95);
-CALL CreateBook('978-87-28-00129-6', 'Creme Fraiche', 'Roman', '1978-09-01', 223, 'Suzanne', 'Brøgger', 'Danish', '1944-11-18', NULL, 189.95, 100);
-CALL CreateBook('978-87-00-93811-9', 'Virginia', 'Roman', '2002-08-01', 200, 'Jens', 'Christian Grøndahl', 'Danish', '1959-11-09', NULL, 199.95, 110.95);
-CALL CreateBook('978-87-03-04712-1', 'Kvinden i buret', 'Krimi', '2007-06-01', 472, 'Jussi', 'Adler-Olsen', 'Danish', '1950-09-02', NULL, 219.95, 189.95);
-CALL CreateBook('978-87-02-15554-7', 'Den som blinker er bange for døden', 'Krimi', '2009-10-01', 420, 'Jussi', 'Adler-Olsen', 'Danish', '1950-09-02', NULL, 219.95, 189.95);
-CALL CreateBook('978-87-03-04694-0', 'Den som blinker er bange for lyset', 'Roman', '2005-06-01', 400, 'Knud', 'Romer', 'Danish', '1951-08-29', NULL, 199.95, 110.95);
-CALL CreateBook('978-87-78-10285-6', 'Raj Raj Raj', 'Roman', '2019-08-01', 300, 'Knud', 'Romer', 'Danish', '1951-08-29', NULL, 219.95, 189.95);
+LOAD DATA INFILE 'C:\countries.csv'
+INTO TABLE Countries
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n' 
+IGNORE 1 LINES 
+(CountryCode, CountryName);
 
--- Creats customers for test
-CALL CreateCustomer('John', 'Doe', 'john@example.com', '123456789', 'Danmark', 'Sjæland', '4100', '123 Main St', 'johndoe', 'password_hash_1', 'salt_1');
-CALL CreateCustomer('Alice', 'Smith', 'alice@example.com', '987654321', 'Danmark', 'Sjæland', '4100', '456 Elm St', 'alicesmith', 'password_hash_2', 'salt_2');
-CALL CreateCustomer('Michael', 'Johnson', 'michael@example.com', '111222333', 'Danmark', 'Sjæland', '4100', '789 Oak St', 'michaeljohnson', 'password_hash_3', 'salt_3');
-CALL CreateCustomer('Emily', 'Brown', 'emily@example.com', '444555666', 'Danmark', 'Sjæland', '4100', '1ahorn alle 1', 'emilybrown', 'password_hash_4', 'salt_4');
-CALL CreateCustomer('Daniel', 'Martinez', 'daniel@example.com', '777888999', 'Danmark', 'Sjæland', '4100', 'Ahone ', 'danielmartinez', 'password_hash_5', 'salt_5');
-CALL CreateCustomer('Sophia', 'Garcia', 'sophia@example.com', '222333444', 'Danmark', 'Sjæland', '4100', 'ahorn alle 2', 'sophiagarcia', 'password_hash_6', 'salt_6');
-CALL CreateCustomer('William', 'Lopez', 'william@example.com', '555666777', 'Danmark', 'Sjæland', '4100', '404 Cedar St', 'williamlopez', 'password_hash_7', 'salt_7');
-CALL CreateCustomer('Olivia', 'Wilson', 'olivia@example.com', '888999000', 'Danmark', 'Sjæland', '4100', 'ahorn alle 3', 'oliviawilson', 'password_hash_8', 'salt_8');
-CALL CreateCustomer('James', 'Anderson', 'james@example.com', '333444555', 'Danmark', 'Sjæland', '4100', '606 Oak St', 'jamesanderson', 'password_hash_9', 'salt_9');
-CALL CreateCustomer('Emma', 'Taylor', 'emma@example.com', '000111222', 'Danmark', 'Sjæland', '4100', '707 Pine St', 'emmataylor', 'password_hash_10', 'salt_10');
+-- Create authors as dummy data
+CALL CreateAuthor('Hans', 'Christian Andersen', 'Danish', '1805-09-07', '1875-08-04');
+CALL CreateAuthor('Karen', 'Blixen', 'Danish', '1885-04-17', '1962-09-07');
+CALL CreateAuthor('H.C.', 'Branner', 'Danish', '1903-07-22', '1966-06-30');
+CALL CreateAuthor('Henrik', 'Pontoppidan', 'Danish', '1857-07-24', '1943-08-21');
+CALL CreateAuthor('Suzanne', 'Brøgger', 'Danish', '1944-11-18', NULL);
+CALL CreateAuthor('Jens', 'Christian Grøndahl', 'Danish', '1959-11-09', NULL);
+CALL CreateAuthor('Jussi', 'Adler-Olsen', 'Danish', '1950-09-02', NULL);
+CALL CreateAuthor('Knud', 'Romer', 'Danish', '1951-08-29', NULL);
 
--- Addes some Purchases to the New Customers
+-- Create price for books as dummy data
+CALL CreatePrice(79.95, 60);
+CALL CreatePrice(129.95, 110.95);
+CALL CreatePrice(249.95, 200.95);
+CALL CreatePrice(179.95, 99.95);
+CALL CreatePrice(189.95, 100);
+CALL CreatePrice(199.95, 110.95);
+CALL CreatePrice(219.95, 189.95);
+CALL CreatePrice(219.95, 189.95);
+CALL CreatePrice(199.95, 110.95);
+CALL CreatePrice(219.95, 189.95);
+
+-- Create books as dummy data
+CALL CreateBook('978-87-01-31786-3', 'Den lille Havfrue', 'Eventyr', '1837-12-01', 32, 1, 1);
+CALL CreateBook('978-87-05-03509-8', 'Babettes gæstebud', 'Novelle', '1958-04-01', 96, 2, 2);
+CALL CreateBook('978-87-23-01534-7', 'Væk Fra Danmark', 'Roman', '1930-09-01', 352, 3, 3);
+CALL CreateBook('978-87-00-76352-8', 'Lykke-Per', 'Roman', '1898-09-091', 778, 4, 4);
+CALL CreateBook('978-87-28-00129-6', 'Creme Fraiche', 'Roman', '1978-09-01', 223, 5, 5);
+CALL CreateBook('978-87-00-93811-9', 'Virginia', 'Roman', '2002-08-01', 200, 6, 6);
+CALL CreateBook('978-87-03-04712-1', 'Kvinden i buret', 'Krimi', '2007-06-01', 472, 7, 7);
+CALL CreateBook('978-87-02-15554-7', 'Den som blinker er bange for døden', 'Krimi', '2009-10-01', 420, 7, 8);
+CALL CreateBook('978-87-03-04694-0', 'Den som blinker er bange for lyset', 'Roman', '2005-06-01', 400, 8, 9);
+CALL CreateBook('978-87-78-10285-6', 'Raj Raj Raj', 'Roman', '2019-08-01', 300, 8, 10);
+
+-- Create logins as dummy data
+CALL CreateLogin('johndoe', 'password_hash_1', 'salt_1');
+CALL CreateLogin('alicesmith', 'password_hash_2', 'salt_2');
+CALL CreateLogin('michaeljohnson', 'password_hash_3', 'salt_3');
+CALL CreateLogin('emilybrown', 'password_hash_4', 'salt_4');
+CALL CreateLogin('danielmartinez', 'password_hash_5', 'salt_5');
+
+-- Create customers as dummy data
+CALL CreateCustomer('John', 'Doe', 'john@example.com', '123456789', 'DK', 'Sjælland', '4100', '123 Main St', 1);
+CALL CreateCustomer('Alice', 'Smith', 'alice@example.com', '987654321', 'DK', 'Sjælland', '4100', '456 Elm St', 2);
+CALL CreateCustomer('Michael', 'Johnson', 'michael@example.com', '111222333', 'DK', 'Sjælland', '4100', '789 Oak St', 3);
+CALL CreateCustomer('Emily', 'Brown', 'emily@example.com', '444555666', 'DK', 'Sjælland', '4100', 'Ahorn Allé 1', 4);
+CALL CreateCustomer('Daniel', 'Martinez', 'daniel@example.com', '777888999', 'DK', 'Sjælland', '4100', 'Ahone 2', 5);
+
+-- Add purchases to the customers as dummy data
 CALL AddPurchase(1, '978-87-01-31786-3');
-CALL AddPurchase(2, '978-87-05-03509-8');
+CALL AddPurchase(4, '978-87-23-01534-7');
 CALL AddPurchase(3, '978-87-23-01534-7');
 CALL AddPurchase(4, '978-87-00-76352-8');
 CALL AddPurchase(5, '978-87-28-00129-6');
-CALL AddPurchase(6, '978-87-00-93811-9');
-CALL AddPurchase(7, '978-87-03-04712-1');
-CALL AddPurchase(8, '978-87-02-15554-7');
-CALL AddPurchase(9, '978-87-03-04694-0');
-CALL AddPurchase(10, '978-87-78-10285-6');
 CALL AddPurchase(1, '978-87-03-04712-1');
 CALL AddPurchase(2, '978-87-01-31786-3');
 CALL AddPurchase(3, '978-87-00-93811-9');
-CALL AddPurchase(4, '978-87-05-03509-8');
+CALL AddPurchase(3, '978-87-05-03509-8');
 CALL AddPurchase(5, '978-87-02-15554-7');
-CALL AddPurchase(6, '978-87-00-76352-8');
-CALL AddPurchase(7, '978-87-03-04694-0');
-CALL AddPurchase(8, '978-87-78-10285-6');
-CALL AddPurchase(9, '978-87-23-01534-7');
-CALL AddPurchase(10, '978-87-28-00129-6');

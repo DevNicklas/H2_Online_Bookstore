@@ -592,8 +592,9 @@ CREATE PROCEDURE GetAllBooks()
 BEGIN
     SELECT
         b.ISBN, b.Title, b.Genre, b.ReleaseDate, b.PageAmount,
-        a.FirstName AS AuthorFirstName,  a.LastName AS AuthorLastName,
-        a.Nationality AS AuthorNationality, a.Birthday AS AuthorBirthday, a.DateOfDeath AS AuthorDateOfDeath,
+        a.FirstName AS AuthorFirstName, a.LastName AS AuthorLastName, 
+        a.Nationality AS AuthorNationality, a.Birthday AS AuthorBirthday, 
+        a.DateOfDeath AS AuthorDateOfDeath,
         pd.PurchasePrice, pd.SalesPrice
     FROM
         Books b

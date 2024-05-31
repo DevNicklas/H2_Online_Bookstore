@@ -590,14 +590,37 @@ END //
 
 CREATE PROCEDURE GetAllBooks()
 BEGIN
-	SELECT * FROM Books;
-END//
+    SELECT
+        b.ISBN, b.Title, b.Genre, b.ReleaseDate, b.PageAmount,
+        a.FirstName AS AuthorFirstName,  a.LastName AS AuthorLastName,
+        a.Nationality AS AuthorNationality, a.Birthday AS AuthorBirthday, a.DateOfDeath AS AuthorDateOfDeath,
+        pd.PurchasePrice, pd.SalesPrice
+    FROM
+        Books b
+    INNER JOIN
+        Authors a ON b.AuthorID = a.AuthorID
+    INNER JOIN
+        PriceDetails pd ON b.PricingDetailID = pd.PricingDetailID;
+END //
 
 CREATE PROCEDURE GetBookByTitle(
-	IN in_book_title VARCHAR(50)
+    IN in_book_title VARCHAR(50)
 )
 BEGIN
-	SELECT * FROM Books WHERE Title = in_book_title;
+    SELECT
+        b.ISBN, b.Title, b.Genre, b.ReleaseDate, b.PageAmount,
+        a.FirstName AS AuthorFirstName, a.LastName AS AuthorLastName, 
+        a.Nationality AS AuthorNationality, a.Birthday AS AuthorBirthday, 
+        a.DateOfDeath AS AuthorDateOfDeath,
+        pd.PurchasePrice, pd.SalesPrice
+    FROM
+        Books b
+    INNER JOIN
+        Authors a ON b.AuthorID = a.AuthorID
+    INNER JOIN
+        PriceDetails pd ON b.PricingDetailID = pd.PricingDetailID
+    WHERE
+        b.Title = in_book_title;
 END//
 
 CREATE PROCEDURE AddExistingBookToStorage(
